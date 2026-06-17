@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OMR মূল্যায়ন সিস্টেম — মিঠাপুকুর মহাবিদ্যালয়</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0f1923;--ink2:#3d4f61;--ink3:#8a9ab0;
+  --paper:#f4f6f9;--white:#ffffff;
+  --blue:#1a5cff;--blue-d:#1248d4;--blue-l:#e8eeff;
+  --green:#0ca678;--green-l:#d3f9ed;
+  --red:#e03131;--red-l:#ffe3e3;
+  --amber:#e67700;--amber-l:#fff3cd;
+  --border:#dde3ec;--radius:10px;
+  --shadow:0 2px 12px rgba(15,25,35,.08);
+  --shadow-md:0 4px 24px rgba(15,25,35,.14);
+}
+body{font-family:'Hind Siliguri',sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:15px;line-height:1.6}
+.shell{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+
+/* Header */
+.header{background:var(--ink);border-radius:14px;padding:22px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.header h1{font-size:18px;font-weight:700;color:#fff;letter-spacing:-.2px}
+.header p{font-size:12px;color:var(--ink3);margin-top:2px}
+.server-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:6px 14px;font-size:12px;color:#aab;cursor:pointer;transition:background .2s;border:none}
+.server-pill:hover{background:rgba(255,255,255,.14)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ink3);transition:background .3s;flex-shrink:0}
+.dot.online{background:var(--green);box-shadow:0 0 0 3px rgba(12,166,120,.25)}
+.dot.offline{background:var(--red)}
+
+/* Card */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:20px}
+.card-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-title{display:flex;align-items:center;gap:10px;font-weight:600;font-size:14px}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--blue);color:#fff;font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-body{padding:20px}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:700px){.grid-2{grid-template-columns:1fr}}
+
+/* Form */
+.lbl{display:block;font-size:13px;font-weight:500;color:var(--ink2);margin-bottom:5px}
+input[type=text],input[type=number],input[type=password]{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:14px;color:var(--ink);outline:none;transition:border-color .2s;background:var(--white)}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 18px;border-radius:8px;border:none;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover{background:var(--blue-d)}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#099268}
+.btn-ghost{background:transparent;color:var(--ink2);border:1.5px solid var(--border)}.btn-ghost:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-l)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-full{width:100%}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Answer key radios */
+.opt-radio{display:none}
+.opt-label{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;border:2px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;color:var(--ink3);transition:all .15s}
+.opt-radio:checked+.opt-label{background:var(--blue);border-color:var(--blue);color:#fff}
+.opt-label:hover{border-color:var(--blue);color:var(--blue)}
+
+/* Tables */
+.key-table{width:100%;font-size:13px;border-collapse:collapse}
+.key-table th{text-align:center;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;padding:6px 4px}
+.key-table th:first-child{text-align:left}
+.key-table td{padding:4px;text-align:center}
+.key-table td:first-child{text-align:left;font-weight:500;padding-left:4px}
+.key-table tbody tr:hover{background:var(--paper)}
+
+.stu-table{width:100%;font-size:13px;border-collapse:collapse}
+.stu-table th{text-align:left;font-size:11px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;padding:8px 10px;background:var(--paper);border-bottom:1px solid var(--border)}
+.stu-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+.stu-table tr:last-child td{border-bottom:none}
+.stu-table tr:hover td{background:#fafbfd}
+
+.merit-table{width:100%;font-size:13px;border-collapse:collapse}
+.merit-table th{text-align:center;padding:10px 12px;font-size:11px;color:#4f4fff;text-transform:uppercase;letter-spacing:.06em;background:#eef0ff;border-bottom:2px solid #d4d9ff}
+.merit-table td{padding:9px 12px;text-align:center;border-bottom:1px solid var(--border)}
+.merit-table tr:nth-child(even) td{background:#fafbff}
+.merit-table tr:hover td{background:var(--blue-l)}
+
+/* Upload chips */
+.upload-zone{display:flex;gap:6px;flex-wrap:wrap}
+.upload-btn-wrap{position:relative}
+.upload-btn-wrap input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:none;font-family:inherit}
+.chip-file{background:var(--blue-l);color:var(--blue);border:1px solid #c5d3ff}.chip-file:hover{background:#d4deff}
+.chip-cam{background:var(--paper);color:var(--ink2);border:1px solid var(--border)}.chip-cam:hover{background:var(--amber-l);color:var(--amber);border-color:var(--amber)}
+
+/* Score */
+.score-wrap{display:inline-flex;align-items:center;gap:6px}
+.score-num{font-weight:800;font-size:15px;color:var(--green)}
+.grade-pill{display:inline-flex;align-items:center;padding:2px 9px;border-radius:100px;font-size:11px;font-weight:700}
+.roll-input{width:88px;padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;text-align:center;color:var(--ink);outline:none;transition:all .2s}
+.roll-input:focus{border-color:var(--blue)}
+.roll-input.auto{border-color:var(--green);background:var(--green-l);color:#0a7f5c}
+
+/* Scanning */
+.scanning{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--blue)}
+.scan-bar{width:56px;height:3px;background:#dde3ec;border-radius:2px;overflow:hidden}
+.scan-fill{height:100%;width:40%;background:var(--blue);border-radius:2px;animation:sweep 1.2s ease-in-out infinite}
+@keyframes sweep{0%{margin-left:-40%}100%{margin-left:100%}}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:500px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-box{border-radius:10px;padding:12px;text-align:center}
+.stat-val{font-size:20px;font-weight:800}
+.stat-lbl{font-size:11px;margin-top:2px}
+
+/* Drop zone */
+.drop-zone{border:2px dashed var(--border);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--paper);margin-bottom:12px}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--blue);background:var(--blue-l)}
+.drop-zone input{display:none}
+
+/* Camera modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--white);border-radius:14px;padding:24px;max-width:480px;width:90%;box-shadow:var(--shadow-md)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.modal-head h3{font-size:15px;font-weight:700}
+.modal-close{background:var(--paper);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+#cameraFeed{width:100%;border-radius:10px;background:#000;display:block;aspect-ratio:4/3;object-fit:cover}
+#captureCanvas{display:none}
+.modal-footer{margin-top:12px;display:flex;gap:8px;justify-content:flex-end}
+
+/* Toast */
+#toast{display:none;position:fixed;bottom:20px;right:20px;max-width:300px;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;color:#fff;box-shadow:var(--shadow-md);z-index:9999}
+
+/* Misc */
+.hidden{display:none!important}
+.scroll-y{max-height:280px;overflow-y:auto}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}
+.text-sm{font-size:13px}.text-xs{font-size:11px}.text-muted{color:var(--ink3)}
+.flex{display:flex}.items-center{align-items:center}.gap-8{gap:8px}.justify-between{justify-content:space-between}
+
+@media print{body *{visibility:hidden!important}#printArea,#printArea *{visibility:visible!important}#printArea{position:fixed!important;top:0;left:0;width:100%;padding:20px}}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- HEADER -->
+<header class="header">
+  <div>
+    <h1>OMR মূল্যায়ন সিস্টেম</h1>
+    <p>মিঠাপুকুর মহাবিদ্যালয়, রংপুর — স্বয়ংক্রিয় MCQ মূল্যায়ন</p>
+  </div>
+  <button class="server-pill" onclick="checkServer()">
+    <span class="dot" id="serverDot"></span>
+    <span id="serverLabel">সার্ভার পরীক্ষা করছে…</span>
+  </button>
+</header>
+
+<div class="grid-2">
+
+<!-- ═══ LEFT ═══ -->
+<div>
+
+  <!-- Step 1 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title"><span class="step-num">১</span>পরীক্ষার তথ্য</div>
+    </div>
+    <div class="card-body">
+      <div style="margin-bottom:12px">
+        <label class="lbl">পরীক্ষার বিষয়</label>
+        <input type="text" id="subject" value="বাংলা">
+      </div>
+      <div class="grid-2" style="margin-bottom:12px">
+        <div>
+          <label class="lbl">পরীক্ষার্থীর সংখ্যা</label>
+          <input type="number" id="totalStudents" value="3" min="1" max="500">
+        </div>
+        <div>
+          <label class="lbl">মোট প্রশ্ন সংখ্যা</label>
+          <input type="number" id="totalMarks" value="25" min="1" max="100">
+        </div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="generateAnswerKeyGrid()">উত্তর কী গ্রিড তৈরি করুন</button>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card hidden" id="answerKeyCard">
+    <div class="card-head">
+      <div class="card-title"><span class="step-num">২</span>সঠিক উত্তর কী</div>
+      <span class="text-xs text-muted" id="keyProgress"></span>
+    </div>
+    <div class="card-body">
+      <div class="scroll-y">
+        <table class="key-table">
+          <thead><tr><th>প্রশ্ন</th><th>ক</th><th>খ</th><th>গ</th><th>ঘ</th></tr></thead>
+          <tbody id="answerKeyTableBody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-success btn-full mt-12" onclick="saveAnswerKey()">উত্তর কী সংরক্ষণ ও পরবর্তী ধাপ</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ RIGHT ═══ -->
+<div>
+
+  <!-- Step 3 -->
+  <div class="card" id="uploadCard">
+    <div class="card-head">
+      <div class="card-title"><span class="step-num">৩</span>OMR উত্তরপত্র আপলোড</div>
+      <span class="text-xs text-muted" id="uploadProgress"></span>
+    </div>
+    <div class="card-body">
+
+      <div id="uploadPlaceholder" style="text-align:center;padding:30px 0;color:var(--ink3)">
+        <div style="font-size:36px;margin-bottom:8px">📋</div>
+        <p class="text-sm">আগে ধাপ ১ ও ২ সম্পন্ন করুন</p>
+      </div>
+
+      <div id="batchSection" class="hidden">
+        <div class="drop-zone" id="dropZone"
+          onclick="document.getElementById('batchFileInput').click()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleBatchDrop(event)">
+          <input type="file" id="batchFileInput" multiple accept="image/*" onchange="handleBatchFiles(this.files)">
+          <div style="font-size:28px;margin-bottom:6px">🗂️</div>
+          <p class="text-sm"><strong>ব্যাচ আপলোড</strong> — সব OMR ছবি একসাথে টেনে আনুন বা ক্লিক করুন</p>
+          <p class="text-xs text-muted mt-8">JPG / PNG · একসাথে সর্বোচ্চ ৫০০টি</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="processBatch()" style="margin-bottom:12px">⚡ সব শীট একসাথে স্ক্যান করুন</button>
+      </div>
+
+      <div id="studentTableArea" class="hidden">
+        <div style="overflow-x:auto">
+          <table class="stu-table">
+            <thead><tr><th>#</th><th>রোল নম্বর</th><th>OMR ছবি</th><th>ফলাফল</th></tr></thead>
+            <tbody id="studentTableBody"></tbody>
+          </table>
+        </div>
+        <button class="btn btn-primary btn-full mt-12" onclick="calculateMeritList()">মেধা তালিকা তৈরি করুন →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="card hidden" id="meritListArea">
+    <div class="card-head">
+      <div class="card-title"><span class="step-num">৪</span>মেধা তালিকা</div>
+      <div class="flex gap-8">
+        <button class="btn btn-ghost btn-sm" onclick="downloadCSV()">CSV</button>
+        <button class="btn btn-primary btn-sm" onclick="downloadPDF()">PDF</button>
+      </div>
+    </div>
+    <div class="card-body" id="printArea">
+      <div class="stats-row" id="statsRow"></div>
+      <p id="pdfSubject" class="text-sm text-muted" style="text-align:center;margin-bottom:14px"></p>
+      <div style="overflow-x:auto">
+        <table class="merit-table">
+          <thead>
+            <tr><th>র‍্যাংক</th><th>রোল নম্বর</th><th>প্রাপ্ত</th><th>মোট</th><th>%</th><th>গ্রেড</th></tr>
+          </thead>
+          <tbody id="meritTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /grid-2 -->
+</div><!-- /shell -->
+
+<!-- CAMERA MODAL -->
+<div class="modal-overlay" id="cameraModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>📷 ক্যামেরা দিয়ে ছবি তোলা</h3>
+      <button class="modal-close" onclick="closeCamera()">✕</button>
+    </div>
+    <video id="cameraFeed" autoplay playsinline muted></video>
+    <canvas id="captureCanvas"></canvas>
+    <p class="text-xs text-muted mt-8" style="text-align:center">OMR শীটটি সমতলে রাখুন, আলো যেন সরাসরি পড়ে</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeCamera()">বাতিল</button>
+      <button class="btn btn-primary" onclick="capturePhoto()">📸 ছবি তোলা</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══ STATE ══════════════════════════════════════════════════
+var SERVER = 'http://127.0.0.1:5000';
+var masterAnswerKey = {};
+var studentScores   = {};
+var totalQ = 0;
+var cameraStream = null;
+var activeCameraRow = null;
+
+// ══ SERVER CHECK ═══════════════════════════════════════════
+async function checkServer() {
+  var dot = document.getElementById('serverDot');
+  var lbl = document.getElementById('serverLabel');
+  lbl.textContent = 'পরীক্ষা করছে…';
+  dot.className = 'dot';
+  try {
+    var r = await fetch(SERVER + '/health', {signal: AbortSignal.timeout(3000)});
+    if (r.ok) {
+      dot.className = 'dot online';
+      lbl.textContent = 'সার্ভার চালু ✓';
+      return true;
+    }
+  } catch(e) {}
+  dot.className = 'dot offline';
+  lbl.textContent = 'সার্ভার বন্ধ ✗';
+  toast('পাইথন সার্ভার চালু নেই। টার্মিনালে: python app.py', 'error');
+  return false;
+}
+
+// ══ STEP 1 — Answer Key Grid ═══════════════════════════════
+function generateAnswerKeyGrid() {
+  totalQ = parseInt(document.getElementById('totalMarks').value);
+  if (!totalQ || totalQ < 1 || totalQ > 100) {
+    toast('প্রশ্ন সংখ্যা ১–১০০ এর মধ্যে দিন', 'error'); return;
+  }
+  masterAnswerKey = {};
+  var tbody = document.getElementById('answerKeyTableBody');
+  tbody.innerHTML = '';
+  var OPTS = ['ক','খ','গ','ঘ'];
+  for (var i = 1; i <= totalQ; i++) {
+    var tr = document.createElement('tr');
+    var cells = '<td class="text-sm" style="white-space:nowrap">প্র ' + i + '</td>';
+    OPTS.forEach(function(opt) {
+      var id = 'k_q' + i + '_' + opt;
+      cells += '<td>' +
+        '<input type="radio" class="opt-radio" name="key_q' + i + '" id="' + id + '" value="' + opt + '"' +
+        ' onchange="masterAnswerKey[' + i + ']=\'' + opt + '\';updateKeyProgress()">' +
+        '<label class="opt-label" for="' + id + '">' + opt + '</label>' +
+        '</td>';
+    });
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  }
+  document.getElementById('answerKeyCard').classList.remove('hidden');
+  updateKeyProgress();
+  toast('গ্রিড তৈরি হয়েছে — সঠিক উত্তর বাছুন', 'info');
+}
+
+function updateKeyProgress() {
+  var filled = Object.values(masterAnswerKey).filter(Boolean).length;
+  document.getElementById('keyProgress').textContent = filled + ' / ' + totalQ + ' পূরণ';
+}
+
+// ══ STEP 2 — Save Key & Build Student Table ════════════════
+function saveAnswerKey() {
+  var missing = [];
+  for (var q = 1; q <= totalQ; q++) { if (!masterAnswerKey[q]) missing.push(q); }
+  if (missing.length > 0) {
+    toast(missing.length + 'টি উত্তর নেই (প্র: ' + missing.slice(0,5).join(', ') + ')', 'error'); return;
+  }
+  var totalStudents = parseInt(document.getElementById('totalStudents').value);
+  if (!totalStudents || totalStudents < 1) { toast('পরীক্ষার্থীর সংখ্যা দিন', 'error'); return; }
+
+  studentScores = {};
+  var tbody = document.getElementById('studentTableBody');
+  tbody.innerHTML = '';
+  for (var i = 1; i <= totalStudents; i++) {
+    studentScores[i] = {roll: String(100 + i), score: null, _file: null};
+    buildStudentRow(tbody, i);
+  }
+  document.getElementById('uploadPlaceholder').classList.add('hidden');
+  document.getElementById('batchSection').classList.remove('hidden');
+  document.getElementById('studentTableArea').classList.remove('hidden');
+  document.getElementById('meritListArea').classList.add('hidden');
+  updateUploadProgress();
+  toast('প্রস্তুত! এবার OMR ছবি আপলোড করুন', 'success');
+  document.getElementById('uploadCard').scrollIntoView({behavior:'smooth'});
+}
+
+function buildStudentRow(tbody, idx) {
+  var tr = document.createElement('tr');
+  tr.id = 'row_' + idx;
+  tr.innerHTML =
+    '<td class="text-xs text-muted">' + idx + '</td>' +
+    '<td><input type="text" class="roll-input" id="roll_' + idx + '" value="' + (100+idx) + '"></td>' +
+    '<td>' +
+      '<div class="upload-zone">' +
+        '<div class="upload-btn-wrap">' +
+          '<div class="chip chip-file" id="fname_' + idx + '">📁 ফাইল</div>' +
+          '<input type="file" accept="image/*" onchange="handleSingleUpload(this,' + idx + ')">' +
+        '</div>' +
+        '<button class="chip chip-cam" onclick="openCamera(' + idx + ')" type="button">📷 ক্যামেরা</button>' +
+      '</div>' +
+    '</td>' +
+    '<td id="score_display_' + idx + '"><span class="text-xs text-muted">অপেক্ষায়</span></td>';
+  tbody.appendChild(tr);
+  document.getElementById('roll_' + idx).addEventListener('input', (function(i){ return function(){ studentScores[i].roll = this.value; }; })(idx));
+}
+
+function updateUploadProgress() {
+  var done = Object.values(studentScores).filter(function(s){ return s.score !== null && s.score !== undefined; }).length;
+  var total = parseInt(document.getElementById('totalStudents').value) || 0;
+  document.getElementById('uploadProgress').textContent = done + ' / ' + total + ' সম্পন্ন';
+}
+
+// ══ UPLOAD HANDLERS ════════════════════════════════════════
+async function handleSingleUpload(input, rowIndex) {
+  var file = input.files[0];
+  if (!file) return;
+  var nameEl = document.getElementById('fname_' + rowIndex);
+  if (nameEl) nameEl.textContent = file.name.length > 12 ? file.name.slice(0,12)+'…' : file.name;
+  await processOMRFile(file, rowIndex);
+}
+
+function handleBatchDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag-over');
+  handleBatchFiles(e.dataTransfer.files);
+}
+
+function handleBatchFiles(files) {
+  var arr = Array.from(files);
+  if (arr.length === 0) return;
+  arr.forEach(function(file, i) {
+    var idx = i + 1;
+    if (!studentScores[idx]) return;
+    studentScores[idx]._file = file;
+    var nameEl = document.getElementById('fname_' + idx);
+    if (nameEl) nameEl.textContent = file.name.length > 12 ? file.name.slice(0,12)+'…' : file.name;
+  });
+  toast(arr.length + 'টি ফাইল লোড হয়েছে। "সব শীট স্ক্যান" চাপুন।', 'info');
+}
+
+async function processBatch() {
+  var ok = await checkServer();
+  if (!ok) return;
+  var entries = Object.entries(studentScores).filter(function(e){ return e[1]._file; });
+  if (entries.length === 0) { toast('আগে ব্যাচে ফাইল লোড করুন', 'error'); return; }
+
+  var formData = new FormData();
+  formData.append('total_questions', totalQ);
+  entries.forEach(function(e){ formData.append('files', e[1]._file); });
+  entries.forEach(function(e){ showScanning(e[0]); });
+
+  try {
+    var r = await fetch(SERVER + '/upload-omr-batch', {method:'POST', body:formData});
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+    data.results.forEach(function(result, i) {
+      applyResult(result, parseInt(entries[i][0]));
+    });
+    toast('ব্যাচ স্ক্যান সম্পন্ন! ' + data.total + 'টি শীট প্রসেস হয়েছে।', 'success');
+  } catch(err) {
+    entries.forEach(function(e){ showError(e[0]); });
+    toast('ব্যাচ স্ক্যান ব্যর্থ: ' + (err.message || 'সার্ভার সমস্যা'), 'error');
+  }
+}
+
+async function processOMRFile(file, rowIndex) {
+  var ok = await checkServer();
+  if (!ok) return;
+  showScanning(rowIndex);
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('total_questions', totalQ);
+  try {
+    var r = await fetch(SERVER + '/upload-omr', {method:'POST', body:formData});
+    var data = await r.json();
+    if (data.error) throw new Error(data.error);
+    applyResult(data, rowIndex);
+    toast('রোল ' + studentScores[rowIndex].roll + ' স্ক্যান সম্পন্ন!', 'success');
+  } catch(err) {
+    showError(rowIndex);
+    toast('স্ক্যান ব্যর্থ: ' + (err.message || 'সার্ভার অফলাইন'), 'error');
+  }
+}
+
+function applyResult(data, idx) {
+  // Roll
+  if (data.roll && data.roll.indexOf('?') === -1 && data.roll.trim() !== '') {
+    var rollEl = document.getElementById('roll_' + idx);
+    if (rollEl) { rollEl.value = data.roll; rollEl.classList.add('auto'); }
+    studentScores[idx].roll = data.roll;
+  }
+  // Score
+  var score = computeScore(data.answers);
+  studentScores[idx].score = score;
+  var pct = Math.round((score / totalQ) * 100);
+  var g = gradeOf(pct);
+  var display = document.getElementById('score_display_' + idx);
+  display.innerHTML =
+    '<div class="score-wrap">' +
+      '<span class="score-num">' + score + '</span>' +
+      '<span class="text-muted text-xs">/ ' + totalQ + '</span>' +
+      '<span class="grade-pill" style="' + g.style + '">' + g.g + '</span>' +
+    '</div>';
+  updateUploadProgress();
+}
+
+function showScanning(idx) {
+  var d = document.getElementById('score_display_' + idx);
+  if (d) d.innerHTML = '<div class="scanning"><div class="scan-bar"><div class="scan-fill"></div></div>স্ক্যান হচ্ছে…</div>';
+}
+function showError(idx) {
+  var d = document.getElementById('score_display_' + idx);
+  if (d) d.innerHTML = '<span style="color:var(--red);font-size:12px">❌ ব্যর্থ — পুনরায় চেষ্টা করুন</span>';
+}
+
+// ══ CAMERA ════════════════════════════════════════════════
+async function openCamera(rowIndex) {
+  activeCameraRow = rowIndex;
+  document.getElementById('cameraModal').classList.add('open');
+  try {
+    cameraStream = await navigator.mediaDevices.getUserMedia({
+      video: {facingMode:{ideal:'environment'}, width:{ideal:1280}}
+    });
+    document.getElementById('cameraFeed').srcObject = cameraStream;
+  } catch(e) {
+    toast('ক্যামেরা অ্যাক্সেস পাওয়া যায়নি: ' + e.message, 'error');
+    closeCamera();
+  }
+}
+function closeCamera() {
+  if (cameraStream) { cameraStream.getTracks().forEach(function(t){t.stop();}); cameraStream = null; }
+  document.getElementById('cameraModal').classList.remove('open');
+  document.getElementById('cameraFeed').srcObject = null;
+}
+function capturePhoto() {
+  var video = document.getElementById('cameraFeed');
+  var canvas = document.getElementById('captureCanvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  canvas.toBlob(async function(blob) {
+    var file = new File([blob], 'camera_' + activeCameraRow + '.jpg', {type:'image/jpeg'});
+    var nameEl = document.getElementById('fname_' + activeCameraRow);
+    if (nameEl) nameEl.textContent = '📷 ক্যামেরা';
+    closeCamera();
+    await processOMRFile(file, activeCameraRow);
+  }, 'image/jpeg', 0.95);
+}
+
+// ══ SCORING ═══════════════════════════════════════════════
+function computeScore(studentAnswers) {
+  var score = 0;
+  for (var q = 1; q <= totalQ; q++) {
+    var given   = ((studentAnswers[q] || studentAnswers[String(q)] || '')).toString().trim();
+    var correct = (masterAnswerKey[q] || '').toString().trim();
+    if (given && correct && given === correct) score++;
+  }
+  return score;
+}
+
+function gradeOf(pct) {
+  if (pct >= 80) return {g:'A+', style:'background:#d3f9ed;color:#0a7f5c'};
+  if (pct >= 70) return {g:'A',  style:'background:#dbeafe;color:#1d4ed8'};
+  if (pct >= 60) return {g:'B',  style:'background:#ede9fe;color:#6d28d9'};
+  if (pct >= 50) return {g:'C',  style:'background:#fef3c7;color:#b45309'};
+  if (pct >= 40) return {g:'D',  style:'background:#ffedd5;color:#c2410c'};
+  return               {g:'F',  style:'background:#ffe3e3;color:#b91c1c'};
+}
+
+// ══ MERIT LIST ════════════════════════════════════════════
+function calculateMeritList() {
+  var arr = Object.values(studentScores)
+    .filter(function(s){ return s.score !== null && s.score !== undefined; })
+    .sort(function(a,b){ return b.score - a.score || String(a.roll).localeCompare(String(b.roll)); });
+  if (arr.length === 0) { toast('এখনো কোনো খাতা স্ক্যান হয়নি', 'error'); return; }
+
+  var scores  = arr.map(function(s){ return s.score; });
+  var highest = Math.max.apply(null, scores);
+  var lowest  = Math.min.apply(null, scores);
+  var avg     = (scores.reduce(function(a,b){return a+b;},0)/scores.length).toFixed(1);
+
+  function statBox(val, lbl, bg, vc, lc) {
+    return '<div class="stat-box" style="background:' + bg + '">' +
+      '<div class="stat-val" style="color:' + vc + '">' + val + '</div>' +
+      '<div class="stat-lbl" style="color:' + lc + '">' + lbl + '</div></div>';
+  }
+  document.getElementById('statsRow').innerHTML =
+    statBox(arr.length, 'মূল্যায়িত', '#dbeafe', '#1d4ed8', '#3b82f6') +
+    statBox(highest,   'সর্বোচ্চ',  '#d3f9ed', '#0a7f5c', '#0ca678') +
+    statBox(lowest,    'সর্বনিম্ন', '#fff3cd', '#b45309', '#e67700') +
+    statBox(avg,       'গড় নম্বর', '#ede9fe', '#6d28d9', '#7c3aed');
+
+  var subj = document.getElementById('subject').value || 'পরীক্ষা';
+  document.getElementById('pdfSubject').textContent =
+    'বিষয়: ' + subj + ' | মোট নম্বর: ' + totalQ + ' | পরীক্ষার্থী: ' + arr.length;
+
+  var tbody = document.getElementById('meritTableBody');
+  tbody.innerHTML = '';
+  var rankIcons = ['🥇','🥈','🥉'];
+  arr.forEach(function(st, i) {
+    var pct = Math.round((st.score / totalQ) * 100);
+    var g = gradeOf(pct);
+    var rankDisp = i < 3 ? rankIcons[i] : (i+1);
+    tbody.innerHTML +=
+      '<tr>' +
+        '<td style="font-weight:700">' + rankDisp + '</td>' +
+        '<td style="font-family:JetBrains Mono,monospace;font-weight:700">' + st.roll + '</td>' +
+        '<td style="font-size:16px;font-weight:800;color:var(--blue)">' + st.score + '</td>' +
+        '<td class="text-muted">' + totalQ + '</td>' +
+        '<td>' + pct + '%</td>' +
+        '<td><span class="grade-pill" style="' + g.style + '">' + g.g + '</span></td>' +
+      '</tr>';
+  });
+
+  document.getElementById('meritListArea').classList.remove('hidden');
+  document.getElementById('meritListArea').scrollIntoView({behavior:'smooth'});
+  toast('মেধা তালিকা তৈরি হয়েছে!', 'success');
+}
+
+// ══ CSV ═══════════════════════════════════════════════════
+function downloadCSV() {
+  var arr = Object.values(studentScores)
+    .filter(function(s){ return s.score !== null && s.score !== undefined; })
+    .sort(function(a,b){ return b.score - a.score; });
+  if (arr.length === 0) { toast('কোনো ডেটা নেই', 'error'); return; }
+  var subj = document.getElementById('subject').value || 'পরীক্ষা';
+  var lines = ['\uFEFFরোল নম্বর,প্রাপ্ত নম্বর,মোট নম্বর,শতকরা,গ্রেড'];
+  arr.forEach(function(s) {
+    var pct = Math.round((s.score/totalQ)*100);
+    lines.push(s.roll + ',' + s.score + ',' + totalQ + ',' + pct + '%,' + gradeOf(pct).g);
+  });
+  var blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'merit_' + subj + '.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV ডাউনলোড হচ্ছে', 'success');
+}
+
+// ══ PDF ═══════════════════════════════════════════════════
+function downloadPDF() {
+  var arr = Object.values(studentScores)
+    .filter(function(s){ return s.score !== null && s.score !== undefined; })
+    .sort(function(a,b){ return b.score - a.score; });
+  if (arr.length === 0) { toast('কোনো ডেটা নেই', 'error'); return; }
+
+  var subj   = document.getElementById('subject').value || 'পরীক্ষা';
+  var scores = arr.map(function(s){ return s.score; });
+  var avg    = (scores.reduce(function(a,b){return a+b;},0)/scores.length).toFixed(1);
+  var high   = Math.max.apply(null,scores);
+  var low    = Math.min.apply(null,scores);
+
+  var gcMap  = {'A+':'#0a7f5c','A':'#1d4ed8','B':'#6d28d9','C':'#b45309','D':'#c2410c','F':'#b91c1c'};
+  var gbMap  = {'A+':'#d3f9ed','A':'#dbeafe','B':'#ede9fe','C':'#fef3c7','D':'#ffedd5','F':'#ffe3e3'};
+
+  var doc = document.implementation.createHTMLDocument('PDF');
+  var st = doc.createElement('style');
+  st.textContent = 'body{margin:0;padding:24px;font-family:Arial,sans-serif;color:#1e293b;-webkit-print-color-adjust:exact;print-color-adjust:exact}' +
+    '.hdr{background:linear-gradient(135deg,#1d4ed8,#4f46e5);color:#fff;padding:18px 22px;border-radius:10px;margin-bottom:16px}' +
+    '.hdr h1{margin:0;font-size:20px;font-weight:700}.hdr p{margin:4px 0 0;font-size:13px;opacity:.85}' +
+    '.stats{display:flex;gap:10px;margin-bottom:16px}' +
+    '.stat{flex:1;border-radius:8px;padding:10px;text-align:center}' +
+    '.sv{font-size:20px;font-weight:800}.sl{font-size:11px;margin-top:2px}' +
+    'table{width:100%;border-collapse:collapse;font-size:13px;border:1px solid #e2e8f0}' +
+    'thead tr{background:#eef2ff}th{padding:10px 12px;text-align:center;color:#4f46e5;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #c7d2fe}' +
+    'td{padding:9px 12px;text-align:center;border-bottom:1px solid #f1f5f9}' +
+    '.grade{display:inline-block;padding:2px 10px;border-radius:20px;font-weight:700;font-size:12px}' +
+    'footer{text-align:right;font-size:10px;color:#9ca3af;margin-top:12px}' +
+    '@media print{@page{margin:12mm}}';
+  doc.head.appendChild(st);
+
+  var hdr = doc.createElement('div'); hdr.className = 'hdr';
+  hdr.innerHTML = '<h1>মেধা তালিকা</h1><p>বিষয়: ' + subj + ' | মোট নম্বর: ' + totalQ + ' | পরীক্ষার্থী: ' + arr.length + '</p>';
+  doc.body.appendChild(hdr);
+
+  var statsDiv = doc.createElement('div'); statsDiv.className = 'stats';
+  [{val:arr.length,lbl:'মূল্যায়িত',bg:'#eff6ff',bc:'#bfdbfe',vc:'#1d4ed8',lc:'#3b82f6'},
+   {val:high,lbl:'সর্বোচ্চ',bg:'#f0fdf4',bc:'#bbf7d0',vc:'#15803d',lc:'#16a34a'},
+   {val:low,lbl:'সর্বনিম্ন',bg:'#fef3c7',bc:'#fde68a',vc:'#b45309',lc:'#d97706'},
+   {val:avg,lbl:'গড় নম্বর',bg:'#f5f3ff',bc:'#ddd6fe',vc:'#6d28d9',lc:'#7c3aed'}
+  ].forEach(function(s) {
+    var d = doc.createElement('div'); d.className = 'stat';
+    d.style.cssText = 'background:'+s.bg+';border:1px solid '+s.bc;
+    d.innerHTML = '<div class="sv" style="color:'+s.vc+'">'+s.val+'</div><div class="sl" style="color:'+s.lc+'">'+s.lbl+'</div>';
+    statsDiv.appendChild(d);
+  });
+  doc.body.appendChild(statsDiv);
+
+  var table = doc.createElement('table');
+  var thead = doc.createElement('thead');
+  thead.innerHTML = '<tr><th>র‍্যাংক</th><th>রোল নম্বর</th><th>প্রাপ্ত নম্বর</th><th>মোট</th><th>%</th><th>গ্রেড</th></tr>';
+  table.appendChild(thead);
+  var tbody2 = doc.createElement('tbody');
+  arr.forEach(function(st, i) {
+    var pct = Math.round((st.score/totalQ)*100);
+    var g = gradeOf(pct);
+    var tr = doc.createElement('tr');
+    if (i%2!==0) tr.style.background='#f8fafc';
+    tr.innerHTML =
+      '<td style="font-weight:700;color:#9ca3af">'+(i+1)+'</td>' +
+      '<td style="font-weight:700">'+ st.roll +'</td>' +
+      '<td style="font-size:16px;font-weight:800;color:#4f46e5">'+ st.score +'</td>' +
+      '<td style="color:#6b7280">'+ totalQ +'</td>' +
+      '<td>'+ pct +'%</td>' +
+      '<td><span class="grade" style="background:'+(gbMap[g.g]||'#f3f4f6')+';color:'+(gcMap[g.g]||'#374151')+'">'+ g.g +'</span></td>';
+    tbody2.appendChild(tr);
+  });
+  table.appendChild(tbody2);
+  doc.body.appendChild(table);
+
+  var footer = doc.createElement('footer');
+  footer.textContent = 'Generated by OMR Evaluation System — মিঠাপুকুর মহাবিদ্যালয়';
+  doc.body.appendChild(footer);
+
+  var html = '<!DOCTYPE html>' + doc.documentElement.outerHTML;
+  var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  var blobURL = URL.createObjectURL(blob);
+  var old = document.getElementById('printFrame');
+  if (old) old.remove();
+  var iframe = document.createElement('iframe');
+  iframe.id = 'printFrame';
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:0';
+  iframe.src = blobURL;
+  document.body.appendChild(iframe);
+  iframe.onload = function() {
+    setTimeout(function() {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(function(){ URL.revokeObjectURL(blobURL); }, 5000);
+    }, 300);
+  };
+  toast('Print dialog খুলছে — "Save as PDF" বাছুন', 'success');
+}
+
+// ══ TOAST ═════════════════════════════════════════════════
+function toast(msg, type) {
+  var el = document.getElementById('toast');
+  var colors = {info:'#374151', error:'#b91c1c', success:'#065f46'};
+  el.style.background = colors[type] || colors.info;
+  el.textContent = msg;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.style.display = 'none'; }, 3800);
+}
+
+// ══ INIT ══════════════════════════════════════════════════
+checkServer();
+</script>
+</body>
+</html>
