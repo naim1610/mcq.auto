@@ -119,6 +119,38 @@ def correct_perspective(img):
 
     # পদ্ধতি ৩: শুধু resize
     return cv2.resize(img, (W, H))
+    def camscanner_effect(img):
+    """
+    CamScanner এর মতো:
+    ১. Shadow remove
+    ২. Contrast enhance  
+    ৩. Document-like white background
+    """
+    # RGB তে convert
+    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    
+    # ── Shadow Remove ──
+    # প্রতিটি channel এ large kernel দিয়ে background estimate করি
+    result_planes = []
+    for plane in cv2.split(rgb):
+        dilated = cv2.dilate(plane, np.ones((7,7), np.uint8))
+        bg = cv2.medianBlur(dilated, 21)
+        diff = 255 - cv2.absdiff(plane, bg)
+        norm = cv2.normalize(diff, None, 0, 255, cv2.NORM_MINMAX)
+        result_planes.append(norm)
+    
+    shadow_removed = cv2.merge(result_planes)
+    
+    # ── Adaptive Threshold — document look ──
+    gray = cv2.cvtColor(shadow_removed, cv2.COLOR_RGB2GRAY)
+    
+    # CLAHE — local contrast enhance
+    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+    enhanced = clahe.apply(gray)
+    
+    # BGR তে ফেরত
+    result = cv2.cvtColor(enhanced, cv2.COLOR_GRAY2BGR)
+    return result
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -197,6 +229,7 @@ def process_omr(image_bytes, total_questions=50):
         return {"error": "ছবি পড়া যাচ্ছে না। JPG/PNG ফরম্যাট ব্যবহার করুন।"}
 
     img  = correct_perspective(img)
+    img  = camscanner_effect(img)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # Mild blur — noise কমায়, bubble edge ঠিক রাখে
     gray = cv2.GaussianBlur(gray, (3,3), 0)
